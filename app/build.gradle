@@ -33,8 +33,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
-    implementation files('libs/bcprov-jdk15on-1.64.jar')
-    implementation files('libs/cert-cvc-1.4.6.jar')
-    implementation files('libs/jmrtd-0.7.16.jar')
-    implementation files('libs/scuba-smartcards-0.0.18.jar')
+    implementation 'net.sf.scuba:scuba-sc-android:0.0.18'
 }
