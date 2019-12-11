@@ -11,11 +11,12 @@ import android.nfc.tech.IsoDep
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import org.jmrtd.BACKey
-import org.jmrtd.BACKeySpec
-import org.jmrtd.lds.PACEInfo
 import org.jmrtd.PassportService
-import org.jmrtd.lds.CardAccessFile
 import net.sf.scuba.smartcards.CardService
+import java.io.InputStream
+import org.jmrtd.lds.LDSFileUtil
+import org.jmrtd.lds.icao.DG1File
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -82,20 +83,7 @@ class MainActivity : AppCompatActivity() {
             var tag: Tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             if (tag.techList.toList().contains("android.nfc.tech.IsoDep")) {
                 Log.d(TAG, "This is Iso supported tag")
-                if (passportNumber != null && !passportNumber.isEmpty()
-                    && expirationDate != null && !expirationDate.isEmpty()
-                    && birthDate != null && !birthDate.isEmpty()) {
-                    Log.d(TAG, "Fields aren't empty")
-
-                    val bacKey = BACKey(passportNumber, birthDate, expirationDate)
-
-                    Log.d(TAG, "BACKey: ${bacKey.toString()}")
-                    readPassport(IsoDep.get(tag), bacKey)
-                }
-                else {
-                    Log.d(TAG, "[ERROR] Fields are empty")
-                    Toast.makeText(this, "Empty field is not allowed", Toast.LENGTH_SHORT).show()
-                }
+                readPassport(IsoDep.get(tag))
             }
             else {
                 Log.d(TAG, "I don't know this card")
@@ -103,38 +91,71 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun readPassport(isoDep: IsoDep, bacKey: BACKeySpec) {
+    private fun readPassport(isoDep: IsoDep) {
         Log.d(TAG, "Let's read that passport")
-        Log.d(TAG, "isoDep: ${isoDep::class.java.canonicalName as String}")
+
+        if (passportNumber != null && !passportNumber.isEmpty()
+            && expirationDate != null && !expirationDate.isEmpty()
+            && birthDate != null && !birthDate.isEmpty()) {
+            Log.d(TAG, "Fields aren't empty")
+        }
+        else {
+            Log.d(TAG, "[ERROR] Fields are empty")
+            Toast.makeText(this, "Empty field is not allowed", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val bacKey = BACKey(passportNumber, birthDate, expirationDate)
+
         try {
             val cardService = CardService.getInstance(isoDep)
             cardService.open()
 
-//            val service = PassportService(cardService)
-//            service.open()
+            val pasportService = PassportService(cardService
+                , PassportService.NORMAL_MAX_TRANCEIVE_LENGTH
+                , PassportService.DEFAULT_MAX_BLOCKSIZE
+                , false
+                , true)
+            pasportService.open()
 
-            Log.d(TAG, "service.open() just fine")
-//
 //            var paceSucceeded = false
 //            try {
 //                val cardAccessFile =
 //                    CardAccessFile(service.getInputStream(PassportService.EF_CARD_ACCESS))
-//                val paceInfos = cardAccessFile.getPACEInfos()
-//                if (paceInfos != null && paceInfos!!.size > 0) {
-//                    val paceInfo = paceInfos!!.iterator().next()
-//                    val objectIdentifier = paceInfo.getObjectIdentifier()
+//                val secInfos = cardAccessFile.securityInfos
+//                if (secInfos != null && secInfos.isNotEmpty()) {
+//                    val paceInfo = secInfos.iterator().next()
+//                    val oid = paceInfo.objectIdentifier
+//                    Log.d(TAG, oid)
+//
+//                    service.doPACE(bacKey, oid, paceInfoPraramSpec, null)
+
 //                    val paceInfoPraramSpec = PACEInfo.toParameterSpec(paceInfo.getParameterId())
-//                    service.doPACE(bacKey, objectIdentifier, paceInfoPraramSpec)
+//
+
 //                    paceSucceeded = true
 //                } else {
 //                    paceSucceeded = true
 //                }
 //            } catch (e: Exception) {
-//                Log.w(FragmentActivity.TAG, e)
+//                Log.d(TAG, e.toString())
 //                throw e
 //            }
-//
-//            service.sendSelectApplet(paceSucceeded)
+
+            pasportService.sendSelectApplet(false)
+            pasportService.doBAC(bacKey)
+            Log.d(TAG, "BAC success")
+
+            var inputStream: InputStream = pasportService.getInputStream(PassportService.EF_DG1)
+            val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
+            Log.d(TAG, dg1.mrzInfo.personalNumber)
+            Log.d(TAG, dg1.mrzInfo.dateOfBirth)
+            Log.d(TAG, dg1.mrzInfo.nationality)
+            Log.d(TAG, dg1.mrzInfo.documentNumber)
+            Log.d(TAG, dg1.mrzInfo.documentCode)
+            Log.d(TAG, dg1.mrzInfo.dateOfExpiry)
+            Log.d(TAG, dg1.mrzInfo.gender.toString())
+
         } catch (e: Exception) {
             Log.d(TAG, e.toString())
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show()
