@@ -62,11 +62,8 @@ class MainActivity : AppCompatActivity() {
         if(NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.action)) {
             Log.d(TAG, "NFC card has been discovered")
             var tag: Tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-            val techList = tag.getTechList()
-            if (techList.toList().contains("android.nfc.tech.IsoDep")) {
+            if (tag.techList.toList().contains("android.nfc.tech.IsoDep")) {
                 Log.d(TAG, "This is Iso supported tag")
-
-                
             }
             else {
                 Log.d(TAG, "I don't know this card")
