@@ -13,20 +13,24 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jmrtd.BACKey
 import org.jmrtd.PassportService
 import net.sf.scuba.smartcards.CardService
+import org.jmrtd.PACEKeySpec
+import org.jmrtd.lds.CardAccessFile
 import java.io.InputStream
 import org.jmrtd.lds.LDSFileUtil
+import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.icao.DG1File
-
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         val TAG: String  = "MainActivity"
     }
+
     // dates has to be of the "yymmdd" format
     private val passportNumber: String = ""
     private val expirationDate: String = ""
     private val birthDate: String = ""
+    private val can: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,9 +98,10 @@ class MainActivity : AppCompatActivity() {
     private fun readPassport(isoDep: IsoDep) {
         Log.d(TAG, "Let's read that passport")
 
-        if (passportNumber != null && !passportNumber.isEmpty()
-            && expirationDate != null && !expirationDate.isEmpty()
-            && birthDate != null && !birthDate.isEmpty()) {
+        if (passportNumber.isNotEmpty()
+            && expirationDate.isNotEmpty()
+            && birthDate.isNotEmpty()
+            && can.isNotEmpty()) {
             Log.d(TAG, "Fields aren't empty")
         }
         else {
@@ -106,53 +111,56 @@ class MainActivity : AppCompatActivity() {
         }
 
         val bacKey = BACKey(passportNumber, birthDate, expirationDate)
+        val paceKey = PACEKeySpec.createCANKey(can)
 
         try {
             val cardService = CardService.getInstance(isoDep)
             cardService.open()
 
-            val pasportService = PassportService(cardService
+            val passportService = PassportService(cardService
                 , PassportService.NORMAL_MAX_TRANCEIVE_LENGTH
                 , PassportService.DEFAULT_MAX_BLOCKSIZE
                 , false
                 , true)
-            pasportService.open()
+            passportService.open()
 
-//            var paceSucceeded = false
-//            try {
-//                val cardAccessFile =
-//                    CardAccessFile(service.getInputStream(PassportService.EF_CARD_ACCESS))
-//                val secInfos = cardAccessFile.securityInfos
-//                if (secInfos != null && secInfos.isNotEmpty()) {
-//                    val paceInfo = secInfos.iterator().next()
-//                    val oid = paceInfo.objectIdentifier
-//                    Log.d(TAG, oid)
-//
-//                    service.doPACE(bacKey, oid, paceInfoPraramSpec, null)
+            var paceSucceeded = false
+            try {
+                val cardAccessFile = CardAccessFile(passportService.getInputStream(PassportService.EF_CARD_ACCESS))
+                val secInfos = cardAccessFile.securityInfos
+                Log.d(TAG, cardAccessFile.toString())
 
-//                    val paceInfoPraramSpec = PACEInfo.toParameterSpec(paceInfo.getParameterId())
-//
+                if (secInfos != null && secInfos.isNotEmpty()) {
+                    Log.d(TAG, "PACE info has been found")
+                    val paceInfo = secInfos.iterator().next() as PACEInfo
+                    val oid = paceInfo.objectIdentifier
+                    val paramId = paceInfo.parameterId
+                    val params = PACEInfo.toParameterSpec(paramId)
 
-//                    paceSucceeded = true
-//                } else {
-//                    paceSucceeded = true
-//                }
-//            } catch (e: Exception) {
-//                Log.d(TAG, e.toString())
-//                throw e
-//            }
+                    Log.d(TAG, paceInfo.protocolOIDString)
+                    Log.d(TAG, PACEInfo.toStandardizedParamIdString(paramId))
 
-            pasportService.sendSelectApplet(false)
-            pasportService.doBAC(bacKey)
-            Log.d(TAG, "BAC success")
+                    passportService.doPACE(paceKey, oid, params, paramId)
+                    paceSucceeded = true
+                    Log.d(TAG, "PACE has succeeded")
+                }
+            } catch (e: Exception) {
+                Log.d(TAG, "PACE has failed with next error:")
+                Log.d(TAG, e.toString())
+            }
 
-            var inputStream: InputStream = pasportService.getInputStream(PassportService.EF_DG1)
+            passportService.sendSelectApplet(paceSucceeded)
+
+            if (!paceSucceeded) {
+                Log.d(TAG, "Let's try out to proceed with BAC")
+                passportService.doBAC(bacKey)
+                Log.d(TAG, "BAC success")
+            }
+
+            var inputStream: InputStream = passportService.getInputStream(PassportService.EF_DG1)
             val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
-            Log.d(TAG, dg1.mrzInfo.personalNumber)
-            Log.d(TAG, dg1.mrzInfo.dateOfBirth)
             Log.d(TAG, dg1.mrzInfo.nationality)
             Log.d(TAG, dg1.mrzInfo.documentNumber)
-            Log.d(TAG, dg1.mrzInfo.documentCode)
             Log.d(TAG, dg1.mrzInfo.dateOfExpiry)
             Log.d(TAG, dg1.mrzInfo.gender.toString())
 
