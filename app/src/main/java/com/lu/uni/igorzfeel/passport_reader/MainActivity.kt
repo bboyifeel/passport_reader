@@ -28,8 +28,8 @@ class MainActivity : AppCompatActivity() {
 
     // dates has to be of the "yymmdd" format
     private val passportNumber: String = "AA000000"
-    private val expirationDate: String = "01012021"
-    private val birthDate: String = "21212000"
+    private val expirationDate: String = "210101"
+    private val birthDate: String = "000101"
     private val can: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
