@@ -28,10 +28,10 @@ class LoggingActivity : AppCompatActivity() {
     }
 
     // dates has to be of the "yymmdd" format
-    private var passportNumber: String = "AA000000"
-    private var expirationDate: String = "210101"
-    private var birthDate: String = "000101"
-    private var can: String? = null
+    private var passportNumber: String = ""
+    private var expirationDate: String = ""
+    private var birthDate: String = ""
+    private var can: String = ""
 
     private var log: String = ""
 
@@ -49,9 +49,15 @@ class LoggingActivity : AppCompatActivity() {
     }
 
     private fun extractBundle(bundle: Bundle) {
-        can = bundle.getString("can")
+        passportNumber = bundle.getString("passportNumber").toString()
+        expirationDate = bundle.getString("expirationDate").toString()
+        birthDate = bundle.getString("birthDate").toString()
+        can = bundle.getString("can").toString()
         updateLog("Bundle has been extracted")
-        updateLog("CAN " + can)
+        updateLog("passportNumber " + passportNumber)
+        updateLog("expirationDate " + expirationDate)
+        updateLog("birthDate " + birthDate)
+        updateLog("can " + can)
     }
 
     override fun onResume() {
@@ -118,7 +124,7 @@ class LoggingActivity : AppCompatActivity() {
         if (passportNumber.isNotEmpty()
             && expirationDate.isNotEmpty()
             && birthDate.isNotEmpty()
-            && can!!.isNotEmpty()) {
+            && can.isNotEmpty()) {
             updateLog("Fields aren't empty")
         }
         else {

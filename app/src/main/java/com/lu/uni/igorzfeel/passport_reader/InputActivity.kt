@@ -31,12 +31,29 @@ class InputActivity : AppCompatActivity() {
 
     private fun prepareBundle(): Bundle {
         var passportBundle: Bundle = Bundle()
+
+        passportBundle.putString("passportNumber", input_edittxt_passport_number.text.toString())
+        passportBundle.putString("expirationDate", input_edittxt_expiration_date.text.toString())
+        passportBundle.putString("birthDate", input_edittxt_birth_date.text.toString())
         passportBundle.putString("can", input_edittxt_can.text.toString())
+
         return passportBundle
     }
 
     // for now I have only can, since I'm working on PACE. later BAC can be added
     private fun validInput(): Boolean {
+        if (input_edittxt_passport_number.text.toString().isEmpty()){
+            Log.d(TAG, "[ERROR] Passport number cannot be empty")
+            return false
+        }
+        if (input_edittxt_expiration_date.text.toString().length !=6){
+            Log.d(TAG, "[ERROR] Expiration date has to have format yymmdd (incorrect length)")
+            return false
+        }
+        if (input_edittxt_birth_date.text.toString().length !=6){
+            Log.d(TAG, "[ERROR] Birth date has to have format yymmdd (incorrect length)")
+            return false
+        }
         if (input_edittxt_can.text.toString().length != 6){
             Log.d(TAG, "[ERROR] CAN has to have 6 digits")
             return false
@@ -48,7 +65,15 @@ class InputActivity : AppCompatActivity() {
     fun String.toEditable(): Editable =  Editable.Factory.getInstance().newEditable(this)
 
     private fun defaultInput() {
+        val passportNumber: String = ""
+        val expirationDate: String = ""
+        val birthDate: String = ""
         val can: String = ""
+
+        input_edittxt_passport_number.text = passportNumber.toEditable()
+        input_edittxt_expiration_date.text = expirationDate.toEditable()
+        input_edittxt_birth_date.text = birthDate.toEditable()
         input_edittxt_can.text = can.toEditable()
+
     }
 }
