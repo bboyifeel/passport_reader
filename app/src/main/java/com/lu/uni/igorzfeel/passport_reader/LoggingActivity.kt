@@ -1,51 +1,53 @@
 package com.lu.uni.igorzfeel.passport_reader
 
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
-import android.nfc.NfcAdapter
-import android.util.Log
 import android.app.PendingIntent
 import android.content.Intent
+import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
-import kotlinx.android.synthetic.main.activity_main.*
-import org.jmrtd.BACKey
-import org.jmrtd.PassportService
 import net.sf.scuba.smartcards.CardService
+import org.jmrtd.BACKey
 import org.jmrtd.PACEKeySpec
+import org.jmrtd.PassportService
 import org.jmrtd.lds.CardAccessFile
-import java.io.InputStream
 import org.jmrtd.lds.LDSFileUtil
 import org.jmrtd.lds.PACEInfo
 import org.jmrtd.lds.icao.DG1File
+import java.io.InputStream
 
-class MainActivity : AppCompatActivity() {
+class LoggingActivity : AppCompatActivity() {
 
     companion object {
-        val TAG: String  = "MainActivity"
+        val TAG: String  = "LoggingActivity"
     }
 
     // dates has to be of the "yymmdd" format
-    private val passportNumber: String = "AA000000"
-    private val expirationDate: String = "210101"
-    private val birthDate: String = "000101"
-    private val can: String = ""
+    private var passportNumber: String = "AA000000"
+    private var expirationDate: String = "210101"
+    private var birthDate: String = "000101"
+    private var can: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_logging)
 
-        val docInfo: String =
-                "Passport number:   ${passportNumber}\n" +
-                "Expiration date:   ${expirationDate}\n" +
-                "Birthday date:   ${birthDate}"
-
-        document_info_textview.setText(docInfo)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        val passportBundle: Bundle = getIntent().getBundleExtra("passportBundle")
+        extractBundle(passportBundle)
 
         var nfcAdapter = NfcAdapter.getDefaultAdapter(this)
         Log.d(TAG,"NFC supported ${(nfcAdapter != null).toString()}")
         Log.d(TAG, "NFC enabled ${(nfcAdapter?.isEnabled).toString()}")
+    }
+
+    private fun extractBundle(bundle: Bundle) {
+        can = bundle.getString("can")
+        Log.d(TAG,"Bundle has been extracted")
+        Log.d(TAG,"CAN " + can)
     }
 
     override fun onResume() {
@@ -78,6 +80,11 @@ class MainActivity : AppCompatActivity() {
         adapter?.disableForegroundDispatch(this)
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         if(intent == null)
@@ -101,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         if (passportNumber.isNotEmpty()
             && expirationDate.isNotEmpty()
             && birthDate.isNotEmpty()
-            && can.isNotEmpty()) {
+            && can!!.isNotEmpty()) {
             Log.d(TAG, "Fields aren't empty")
         }
         else {
