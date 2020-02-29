@@ -3,9 +3,9 @@ package com.lu.uni.igorzfeel.passport_reader
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_input.*
-
 
 class InputActivity : AppCompatActivity() {
 
@@ -17,6 +17,7 @@ class InputActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_input)
 
+        defaultInput()
         input_btn_confirm.setOnClickListener {
             if (!validInput()) {
                 return@setOnClickListener
@@ -42,5 +43,12 @@ class InputActivity : AppCompatActivity() {
         }
         Log.d(TAG, "Input is valid")
         return true
+    }
+
+    fun String.toEditable(): Editable =  Editable.Factory.getInstance().newEditable(this)
+
+    private fun defaultInput() {
+        val can: String = ""
+        input_edittxt_can.text = can.toEditable()
     }
 }
