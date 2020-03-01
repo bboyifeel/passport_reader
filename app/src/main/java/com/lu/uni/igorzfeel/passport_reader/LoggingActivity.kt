@@ -172,9 +172,10 @@ class LoggingActivity : AppCompatActivity() {
                 updateLog(e.toString())
             }
 
-            passportService.sendSelectApplet(paceSucceeded)
-
-            if (!paceSucceeded) {
+            try {
+                passportService.sendSelectApplet(paceSucceeded)
+            } catch (e: Exception) {
+                // PACE didn't succeed
                 updateLog("Let's try out to proceed with BAC")
                 passportService.doBAC(bacKey)
                 updateLog("BAC success")
