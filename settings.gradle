@@ -1,2 +1,2 @@
 include ':app'
-rootProject.name='passport_reader'
+rootProject.name='passport_reader_kotlin'

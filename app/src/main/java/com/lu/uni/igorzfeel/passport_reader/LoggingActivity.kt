@@ -1,4 +1,4 @@
-package com.lu.uni.igorzfeel.passport_reader
+package com.lu.uni.igorzfeel.passport_reader_kotlin
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -176,6 +176,9 @@ class LoggingActivity : AppCompatActivity() {
                 passportService.sendSelectApplet(paceSucceeded)
             } catch (e: Exception) {
                 // PACE didn't succeed
+            }
+
+            if (!paceSucceeded) {
                 updateLog("Let's try out to proceed with BAC")
                 passportService.doBAC(bacKey)
                 updateLog("BAC success")
@@ -187,6 +190,7 @@ class LoggingActivity : AppCompatActivity() {
             updateLog(dg1.mrzInfo.documentNumber)
             updateLog(dg1.mrzInfo.dateOfExpiry)
             updateLog(dg1.mrzInfo.gender.toString())
+            updateLog(dg1.mrzInfo.issuingState.toString())
 
         } catch (e: Exception) {
             updateLog(e.toString())

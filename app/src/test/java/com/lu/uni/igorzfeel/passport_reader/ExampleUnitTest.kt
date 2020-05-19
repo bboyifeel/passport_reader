@@ -1,4 +1,4 @@
-package com.lu.uni.igorzfeel.passport_reader
+package com.lu.uni.igorzfeel.passport_reader_kotlin
 
 import org.junit.Test
 
