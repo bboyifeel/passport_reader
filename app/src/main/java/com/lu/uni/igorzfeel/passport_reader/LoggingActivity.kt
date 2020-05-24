@@ -121,13 +121,10 @@ class LoggingActivity : AppCompatActivity() {
     private fun readPassport(isoDep: IsoDep) {
         updateLog("Let's read that passport")
 
-        if (passportNumber.isNotEmpty()
+        if (!(passportNumber.isNotEmpty()
             && expirationDate.isNotEmpty()
             && birthDate.isNotEmpty()
-            && can.isNotEmpty()) {
-            updateLog("Fields aren't empty")
-        }
-        else {
+            && can.isNotEmpty())) {
             updateLog("[ERROR] Fields are empty")
             Toast.makeText(this, "Empty field is not allowed", Toast.LENGTH_SHORT).show()
             return
@@ -147,30 +144,7 @@ class LoggingActivity : AppCompatActivity() {
                 , true)
             passportService.open()
 
-            var paceSucceeded = false
-            try {
-                val cardAccessFile = CardAccessFile(passportService.getInputStream(PassportService.EF_CARD_ACCESS))
-                val secInfos = cardAccessFile.securityInfos
-                updateLog(cardAccessFile.toString())
-
-                if (secInfos != null && secInfos.isNotEmpty()) {
-                    Log.d(TAG, "PACE info has been found")
-                    val paceInfo = secInfos.iterator().next() as PACEInfo
-                    val oid = paceInfo.objectIdentifier
-                    val paramId = paceInfo.parameterId
-                    val params = PACEInfo.toParameterSpec(paramId)
-
-                    updateLog(paceInfo.protocolOIDString)
-                    updateLog(PACEInfo.toStandardizedParamIdString(paramId))
-
-                    passportService.doPACE(paceKey, oid, params, paramId)
-                    paceSucceeded = true
-                    updateLog("PACE has succeeded")
-                }
-            } catch (e: Exception) {
-                updateLog("PACE has failed with next error:")
-                updateLog(e.toString())
-            }
+            var paceSucceeded = doPace(passportService, paceKey)
 
             try {
                 passportService.sendSelectApplet(paceSucceeded)
@@ -184,17 +158,54 @@ class LoggingActivity : AppCompatActivity() {
                 updateLog("BAC success")
             }
 
-            var inputStream: InputStream = passportService.getInputStream(PassportService.EF_DG1)
-            val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
-            updateLog(dg1.mrzInfo.nationality)
-            updateLog(dg1.mrzInfo.documentNumber)
-            updateLog(dg1.mrzInfo.dateOfExpiry)
-            updateLog(dg1.mrzInfo.gender.toString())
-            updateLog(dg1.mrzInfo.issuingState.toString())
-
+            extractPrivateData(passportService)
         } catch (e: Exception) {
             updateLog(e.toString())
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    @Throws(net.sf.scuba.smartcards.CardServiceException::class)
+    private fun extractPrivateData(passportService: PassportService) {
+        var inputStream: InputStream = passportService.getInputStream(PassportService.EF_DG1)
+        val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
+        updateLog(dg1.mrzInfo.nationality)
+        updateLog(dg1.mrzInfo.documentNumber)
+        updateLog(dg1.mrzInfo.dateOfExpiry)
+        updateLog(dg1.mrzInfo.gender.toString())
+        updateLog(dg1.mrzInfo.issuingState.toString())
+    }
+
+    private fun doPace(
+        passportService: PassportService,
+        paceKey: PACEKeySpec?
+    ): Boolean {
+        var paceSucceeded = false
+        try {
+            val cardAccessFile =
+                CardAccessFile(passportService.getInputStream(PassportService.EF_CARD_ACCESS))
+            val secInfos = cardAccessFile.securityInfos
+            updateLog(cardAccessFile.toString())
+
+            if (secInfos != null && secInfos.isNotEmpty()) {
+                Log.d(TAG, "PACE info has been found")
+                val paceInfo = secInfos.iterator().next() as PACEInfo
+                val oid = paceInfo.objectIdentifier
+                val paramId = paceInfo.parameterId
+                val params = PACEInfo.toParameterSpec(paramId)
+
+                updateLog(paceInfo.protocolOIDString)
+                updateLog(PACEInfo.toStandardizedParamIdString(paramId))
+
+                passportService.doPACE(paceKey, oid, params, paramId)
+                paceSucceeded = true
+                updateLog("PACE has succeeded")
+            }
+        } catch (e: Exception) {
+            updateLog("PACE has failed with next error:")
+            updateLog(e.toString())
+        }
+
+        return paceSucceeded
     }
 }
