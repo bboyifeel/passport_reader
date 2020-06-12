@@ -19,14 +19,19 @@ class InputActivity : AppCompatActivity() {
 
         defaultInput()
         input_btn_confirm.setOnClickListener {
-            if (!validInput()) {
-                return@setOnClickListener
-            }
-            val passportBundle: Bundle = prepareBundle()
-            val intent = Intent(this, LoggingActivity::class.java)
-            intent.putExtra("passportBundle", passportBundle)
-            startActivity(intent)
+            startReadingButton()
         }
+        startReadingButton()
+    }
+
+    private fun startReadingButton() {
+        if (!validInput()) {
+            return
+        }
+        val passportBundle: Bundle = prepareBundle()
+        val intent = Intent(this, LoggingActivity::class.java)
+        intent.putExtra("passportBundle", passportBundle)
+        startActivity(intent)
     }
 
     private fun prepareBundle(): Bundle {

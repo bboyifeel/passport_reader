@@ -1,14 +1,12 @@
 package com.lu.uni.igorzfeel.passport_reader_kotlin
 
-import android.app.PendingIntent
-import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_logging.*
 import net.sf.scuba.smartcards.CardService
 import org.jmrtd.BACKey
@@ -21,11 +19,13 @@ import org.jmrtd.lds.icao.DG1File
 import java.io.InputStream
 
 
-class LoggingActivity : AppCompatActivity() {
+class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String  = "LoggingActivity"
     }
+
+    private var nfcAdapter: NfcAdapter? = null
 
     // dates has to be of the "yymmdd" format
     private var passportNumber: String = ""
@@ -43,10 +43,18 @@ class LoggingActivity : AppCompatActivity() {
         val passportBundle: Bundle = getIntent().getBundleExtra("passportBundle")
         extractBundle(passportBundle)
 
-        var nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this)
         updateLog("NFC supported ${(nfcAdapter != null).toString()}")
         updateLog("NFC enabled ${(nfcAdapter?.isEnabled).toString()}")
     }
+
+
+    override fun onTagDiscovered(tag: Tag?) {
+        updateLog("NFC card has been discovered")
+        val isoDep = IsoDep.get(tag)
+        readPassport(isoDep)
+    }
+
 
     private fun extractBundle(bundle: Bundle) {
         passportNumber = bundle.getString("passportNumber").toString()
@@ -62,32 +70,16 @@ class LoggingActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        val adapter = NfcAdapter.getDefaultAdapter(this)
-
-        if (adapter != null) {
-            if (!adapter.isEnabled()) {
-                Toast.makeText(this, "NFC is off, turn it on!", Toast.LENGTH_SHORT).show()
-                return
-            }
-            val intent = Intent(applicationContext, this.javaClass)
-            intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
-            val pendingIntent =
-                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-            val filter = arrayOf(arrayOf("android.nfc.tech.IsoDep"))
-            adapter.enableForegroundDispatch(this, pendingIntent, null, filter)
-        }
-        else {
-            Toast.makeText(this, "Device doesn't support NFC", Toast.LENGTH_SHORT).show()
-            return
-        }
+        nfcAdapter?.enableReaderMode(this, this,
+            NfcAdapter.FLAG_READER_NFC_A or
+                    NfcAdapter.FLAG_READER_NFC_B or
+                    NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK,
+            null)
     }
 
     override fun onPause() {
         super.onPause()
-
-        val adapter = NfcAdapter.getDefaultAdapter(this)
-        adapter?.disableForegroundDispatch(this)
+        nfcAdapter?.disableReaderMode(this)
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -95,32 +87,15 @@ class LoggingActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        if(intent == null)
-            return
-        if(NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.action)) {
-            updateLog("NFC card has been discovered")
-            var tag: Tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-            if (tag.techList.toList().contains("android.nfc.tech.IsoDep")) {
-                updateLog("This is Iso supported tag")
-                readPassport(IsoDep.get(tag))
-            }
-            else {
-                updateLog("I don't know this card")
-            }
-        }
-    }
-
     private fun updateLog(msg: String) {
-        Log.d(TAG, msg)
+//        Log.d(TAG, msg)
+        System.out.println(msg)
         log += msg + "\n"
         logging_txtview_log.text = log
     }
 
     private fun readPassport(isoDep: IsoDep) {
         updateLog("Let's read that passport")
-
         if (!(passportNumber.isNotEmpty()
             && expirationDate.isNotEmpty()
             && birthDate.isNotEmpty()
@@ -130,19 +105,28 @@ class LoggingActivity : AppCompatActivity() {
             return
         }
 
+        //////////////////////[begin] TEST
+
+//        isoDep.connect()
+//        val command: ByteArray = HexStringToByteArray("00A4040C07A0000002471001")
+//        val result = isoDep.transceive(command)
+//        updateLog(ByteArrayToHexString(result))
+//        return
+        //////////////////////[end] TEST
+
         val bacKey = BACKey(passportNumber, birthDate, expirationDate)
         val paceKey = PACEKeySpec.createCANKey(can)
 
         try {
             val cardService = CardService.getInstance(isoDep)
-            cardService.open()
-
             val passportService = PassportService(cardService
                 , PassportService.NORMAL_MAX_TRANCEIVE_LENGTH
                 , PassportService.DEFAULT_MAX_BLOCKSIZE
                 , false
                 , true)
             passportService.open()
+
+            updateLog("Passport Service has been opened")
 
             var paceSucceeded = doPace(passportService, paceKey)
 
@@ -165,16 +149,6 @@ class LoggingActivity : AppCompatActivity() {
         }
     }
 
-    @Throws(net.sf.scuba.smartcards.CardServiceException::class)
-    private fun extractPrivateData(passportService: PassportService) {
-        var inputStream: InputStream = passportService.getInputStream(PassportService.EF_DG1)
-        val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
-        updateLog(dg1.mrzInfo.nationality)
-        updateLog(dg1.mrzInfo.documentNumber)
-        updateLog(dg1.mrzInfo.dateOfExpiry)
-        updateLog(dg1.mrzInfo.gender.toString())
-        updateLog(dg1.mrzInfo.issuingState.toString())
-    }
 
     private fun doPace(
         passportService: PassportService,
@@ -208,4 +182,55 @@ class LoggingActivity : AppCompatActivity() {
 
         return paceSucceeded
     }
+
+
+    @Throws(net.sf.scuba.smartcards.CardServiceException::class)
+    private fun extractPrivateData(passportService: PassportService) {
+        var inputStream: InputStream = passportService.getInputStream(PassportService.EF_DG1)
+        val dg1 = LDSFileUtil.getLDSFile(PassportService.EF_DG1, inputStream) as DG1File
+        updateLog(dg1.mrzInfo.nationality)
+        updateLog(dg1.mrzInfo.documentNumber)
+        updateLog(dg1.mrzInfo.dateOfExpiry)
+        updateLog(dg1.mrzInfo.gender.toString())
+        updateLog(dg1.mrzInfo.issuingState.toString())
+    }
+
+
+    //////////////////////[begin] TEST
+    fun ByteArrayToHexString(bytes: ByteArray): String {
+        val hexArray = charArrayOf(
+            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+            'A', 'B', 'C', 'D', 'E', 'F'
+        )
+        val hexChars =
+            CharArray(bytes.size * 2) // Each byte has two hex characters (nibbles)
+        var v: Int
+        for (j in bytes.indices) {
+            v = bytes[j].toInt()  and 0xFF // Cast bytes[j] to int, treating as unsigned value
+            hexChars[j * 2] = hexArray[v ushr 4] // Select hex character from upper nibble
+            hexChars[j * 2 + 1] =
+                hexArray[v and 0x0F] // Select hex character from lower nibble
+        }
+        return String(hexChars)
+    }
+
+
+    @Throws(IllegalArgumentException::class)
+    fun HexStringToByteArray(s: String): ByteArray {
+        val len = s.length
+        require(len % 2 != 1) { "Hex string must have even number of characters" }
+        val data =
+            ByteArray(len / 2) // Allocate 1 byte per 2 hex characters
+        var i = 0
+        while (i < len) {
+
+            // Convert each character into a integer (base-16), then bit-shift into place
+            data[i / 2] = ((Character.digit(s[i], 16) shl 4)
+                    + Character.digit(s[i + 1], 16)).toByte()
+            i += 2
+        }
+        return data
+    }
+
+    //////////////////////[end] TEST
 }
