@@ -70,10 +70,10 @@ class InputActivity : AppCompatActivity() {
     fun String.toEditable(): Editable =  Editable.Factory.getInstance().newEditable(this)
 
     private fun defaultInput() {
-        val passportNumber: String = ""
-        val expirationDate: String = ""
-        val birthDate: String = ""
-        val can: String = ""
+        val passportNumber: String = "123456"
+        val expirationDate: String = "123456"
+        val birthDate: String = "123456"
+        val can: String = "123456"
 
         input_edittxt_passport_number.text = passportNumber.toEditable()
         input_edittxt_expiration_date.text = expirationDate.toEditable()

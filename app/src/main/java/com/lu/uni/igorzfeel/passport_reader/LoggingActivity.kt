@@ -137,12 +137,14 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 , true)
             passportService.open()
 
+//            invokingReaderApp(isoDep)
+
             var paceSucceeded = doPace(passportService, paceKey)
 
             try {
                 passportService.sendSelectApplet(paceSucceeded)
             } catch (e: Exception) {
-                // PACE didn't succeed
+                updateError(e.toString())
             }
 
             if (!paceSucceeded) {
@@ -155,6 +157,22 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         } catch (e: Exception) {
             updateError(e.toString())
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    private fun invokingReaderApp(isoDep: IsoDep) {
+        // this function is a fix of the passport emulator side issue
+        // should not be used with a real document
+
+        try {
+            var command: ByteArray = Utils.hexStringToByteArray("00A4040C07A0000002471001")
+            updateLog("Sending " + "00A4040C07A0000002471001")
+            var result = isoDep.transceive(command)
+            updateLog(Utils.toHex(result))
+        } catch (e: Exception) {
+            updateError("First capdu failed for some reason")
+            updateError(e.toString())
         }
     }
 
@@ -186,7 +204,7 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             }
         } catch (e: Exception) {
             updateError("PACE has failed with next error:")
-            updateLog(e.toString())
+            updateError(e.toString())
         }
 
         return paceSucceeded
