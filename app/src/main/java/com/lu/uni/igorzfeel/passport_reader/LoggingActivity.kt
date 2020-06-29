@@ -48,12 +48,12 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
     private fun logGeneralInfo() {
-        updateLog("NFC supported ${(nfcAdapter != null).toString()}")
-        updateLog("NFC enabled ${(nfcAdapter?.isEnabled).toString()}")
-        updateLog("passportNumber " + passportNumber)
-        updateLog("expirationDate " + expirationDate)
-        updateLog("birthDate " + birthDate)
-        updateLog("can " + can)
+        updateLog("NFC supported - ${(nfcAdapter != null).toString()}")
+        updateLog("NFC enabled - ${(nfcAdapter?.isEnabled).toString()}")
+        updateLog("passportNumber: " + passportNumber)
+        updateLog("expirationDate: " + expirationDate)
+        updateLog("birthDate: " + birthDate)
+        updateLog("CAN: " + can)
     }
 
 

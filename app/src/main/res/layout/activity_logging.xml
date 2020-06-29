@@ -24,6 +24,9 @@
             android:layout_width    ="match_parent"
             android:layout_height   ="wrap_content"
             android:text=""
+            android:textSize="16dp"
+            android:lineSpacingExtra="6dp"
+            android:textColor="@android:color/black"
             />
     </ScrollView>
 
