@@ -2,8 +2,13 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width    ="match_parent"
+    android:layout_height   ="match_parent"
+
+    android:paddingTop      ="10dp"
+    android:paddingLeft     ="10dp"
+    android:paddingBottom   ="10dp"
+    android:paddingRight    ="10dp"
     tools:context=".InputActivity">
 
     <TextView
@@ -16,69 +21,69 @@
 
     <EditText
         android:id="@+id/input_edittxt_passport_number"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:ems="8"
-        app:layout_constraintTop_toBottomOf="@id/input_txtview_passport_number"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        app:layout_constraintTop_toBottomOf ="@id/input_txtview_passport_number"
+        app:layout_constraintLeft_toLeftOf  ="parent"/>
 
     <TextView
         android:id="@+id/input_txtview_expiration_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:text="Expiration Date (yymmdd)"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_edittxt_passport_number" />
+        app:layout_constraintLeft_toLeftOf  ="parent"
+        app:layout_constraintTop_toBottomOf ="@id/input_edittxt_passport_number" />
 
     <EditText
         android:id="@+id/input_edittxt_expiration_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:ems="6"
         android:inputType="number"
-        app:layout_constraintTop_toBottomOf="@id/input_txtview_expiration_date"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        app:layout_constraintTop_toBottomOf ="@id/input_txtview_expiration_date"
+        app:layout_constraintLeft_toLeftOf  ="parent"/>
 
     <TextView
         android:id="@+id/input_txtview_birth_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:text="Birth Date (yymmdd)"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_edittxt_expiration_date" />
+        app:layout_constraintLeft_toLeftOf  ="parent"
+        app:layout_constraintTop_toBottomOf ="@id/input_edittxt_expiration_date" />
 
     <EditText
         android:id="@+id/input_edittxt_birth_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:ems="6"
         android:inputType="number"
-        app:layout_constraintTop_toBottomOf="@id/input_txtview_birth_date"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        app:layout_constraintTop_toBottomOf ="@id/input_txtview_birth_date"
+        app:layout_constraintLeft_toLeftOf  ="parent"/>
 
     <TextView
         android:id="@+id/input_txtview_can"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:text="CAN"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_edittxt_birth_date" />
+        app:layout_constraintLeft_toLeftOf  ="parent"
+        app:layout_constraintTop_toBottomOf ="@id/input_edittxt_birth_date" />
 
     <EditText
         android:id="@+id/input_edittxt_can"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:ems="6"
         android:inputType="number"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_txtview_can"/>
+        app:layout_constraintLeft_toLeftOf  ="parent"
+        app:layout_constraintTop_toBottomOf ="@id/input_txtview_can"/>
 
     <Button
         android:id="@+id/input_btn_confirm"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width    ="wrap_content"
+        android:layout_height   ="wrap_content"
         android:text="Confirm"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/input_edittxt_can" />
+        app:layout_constraintLeft_toLeftOf  ="parent"
+        app:layout_constraintTop_toBottomOf ="@id/input_edittxt_can" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
