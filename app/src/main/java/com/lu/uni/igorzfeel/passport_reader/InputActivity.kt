@@ -48,19 +48,19 @@ class InputActivity : AppCompatActivity() {
     // for now I have only can, since I'm working on PACE. later BAC can be added
     private fun validInput(): Boolean {
         if (input_edittxt_passport_number.text.toString().isEmpty()){
-            Log.d(TAG, "[ERROR] Passport number cannot be empty")
+            Log.e(TAG, "[ERROR] Passport number cannot be empty")
             return false
         }
         if (input_edittxt_expiration_date.text.toString().length !=6){
-            Log.d(TAG, "[ERROR] Expiration date has to have format yymmdd (incorrect length)")
+            Log.e(TAG, "[ERROR] Expiration date has to have format yymmdd (incorrect length)")
             return false
         }
         if (input_edittxt_birth_date.text.toString().length !=6){
-            Log.d(TAG, "[ERROR] Birth date has to have format yymmdd (incorrect length)")
+            Log.e(TAG, "[ERROR] Birth date has to have format yymmdd (incorrect length)")
             return false
         }
         if (input_edittxt_can.text.toString().length != 6){
-            Log.d(TAG, "[ERROR] CAN has to have 6 digits")
+            Log.e(TAG, "[ERROR] CAN has to have 6 digits")
             return false
         }
         Log.d(TAG, "Input is valid")

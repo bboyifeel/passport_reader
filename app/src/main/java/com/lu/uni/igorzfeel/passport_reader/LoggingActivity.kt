@@ -33,7 +33,6 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var birthDate: String = ""
     private var can: String = ""
 
-    private var log: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,13 +43,25 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         extractBundle(passportBundle)
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this)
+
+        logGeneralInfo()
+    }
+
+    private fun logGeneralInfo() {
         updateLog("NFC supported ${(nfcAdapter != null).toString()}")
         updateLog("NFC enabled ${(nfcAdapter?.isEnabled).toString()}")
+        updateLog("passportNumber " + passportNumber)
+        updateLog("expirationDate " + expirationDate)
+        updateLog("birthDate " + birthDate)
+        updateLog("can " + can)
     }
 
 
     override fun onTagDiscovered(tag: Tag?) {
+        clearLog()
+        logGeneralInfo()
         updateLog("NFC card has been discovered")
+
         val isoDep = IsoDep.get(tag)
         readPassport(isoDep)
     }
@@ -61,12 +72,8 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         expirationDate = bundle.getString("expirationDate").toString()
         birthDate = bundle.getString("birthDate").toString()
         can = bundle.getString("can").toString()
-        updateLog("Bundle has been extracted")
-        updateLog("passportNumber " + passportNumber)
-        updateLog("expirationDate " + expirationDate)
-        updateLog("birthDate " + birthDate)
-        updateLog("can " + can)
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -77,22 +84,35 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             null)
     }
 
+
     override fun onPause() {
         super.onPause()
         nfcAdapter?.disableReaderMode(this)
     }
+
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
         return true
     }
 
+
     private fun updateLog(msg: String) {
-//        Log.d(TAG, msg)
-        System.out.println(msg)
-        log += msg + "\n"
-        logging_txtview_log.text = log
+        Log.i(TAG, msg)
+        runOnUiThread {logging_txtview_log.append(msg + "\n") }
     }
+
+
+    private fun clearLog() {
+        runOnUiThread {logging_txtview_log.text = "" }
+    }
+
+
+    private fun updateError(msg: String) {
+        Log.e(TAG, msg)
+        runOnUiThread {logging_txtview_log.append("[ERROR] " + msg + "\n") }
+    }
+
 
     private fun readPassport(isoDep: IsoDep) {
         updateLog("Let's read that passport")
@@ -100,19 +120,10 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             && expirationDate.isNotEmpty()
             && birthDate.isNotEmpty()
             && can.isNotEmpty())) {
-            updateLog("[ERROR] Fields are empty")
+            updateError("Fields are empty")
             Toast.makeText(this, "Empty field is not allowed", Toast.LENGTH_SHORT).show()
             return
         }
-
-        //////////////////////[begin] TEST
-
-//        isoDep.connect()
-//        val command: ByteArray = HexStringToByteArray("00A4040C07A0000002471001")
-//        val result = isoDep.transceive(command)
-//        updateLog(ByteArrayToHexString(result))
-//        return
-        //////////////////////[end] TEST
 
         val bacKey = BACKey(passportNumber, birthDate, expirationDate)
         val paceKey = PACEKeySpec.createCANKey(can)
@@ -125,8 +136,6 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 , false
                 , true)
             passportService.open()
-
-            updateLog("Passport Service has been opened")
 
             var paceSucceeded = doPace(passportService, paceKey)
 
@@ -144,7 +153,7 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
             extractPrivateData(passportService)
         } catch (e: Exception) {
-            updateLog(e.toString())
+            updateError(e.toString())
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show()
         }
     }
@@ -176,7 +185,7 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 updateLog("PACE has succeeded")
             }
         } catch (e: Exception) {
-            updateLog("PACE has failed with next error:")
+            updateError("PACE has failed with next error:")
             updateLog(e.toString())
         }
 
@@ -196,41 +205,4 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     }
 
 
-    //////////////////////[begin] TEST
-    fun ByteArrayToHexString(bytes: ByteArray): String {
-        val hexArray = charArrayOf(
-            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-            'A', 'B', 'C', 'D', 'E', 'F'
-        )
-        val hexChars =
-            CharArray(bytes.size * 2) // Each byte has two hex characters (nibbles)
-        var v: Int
-        for (j in bytes.indices) {
-            v = bytes[j].toInt()  and 0xFF // Cast bytes[j] to int, treating as unsigned value
-            hexChars[j * 2] = hexArray[v ushr 4] // Select hex character from upper nibble
-            hexChars[j * 2 + 1] =
-                hexArray[v and 0x0F] // Select hex character from lower nibble
-        }
-        return String(hexChars)
-    }
-
-
-    @Throws(IllegalArgumentException::class)
-    fun HexStringToByteArray(s: String): ByteArray {
-        val len = s.length
-        require(len % 2 != 1) { "Hex string must have even number of characters" }
-        val data =
-            ByteArray(len / 2) // Allocate 1 byte per 2 hex characters
-        var i = 0
-        while (i < len) {
-
-            // Convert each character into a integer (base-16), then bit-shift into place
-            data[i / 2] = ((Character.digit(s[i], 16) shl 4)
-                    + Character.digit(s[i + 1], 16)).toByte()
-            i += 2
-        }
-        return data
-    }
-
-    //////////////////////[end] TEST
 }
