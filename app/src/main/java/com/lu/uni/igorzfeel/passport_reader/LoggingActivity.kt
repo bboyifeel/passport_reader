@@ -23,6 +23,7 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String  = "LoggingActivity"
+        private const val TIMEOUT_ISODEP = 10_000
     }
 
     private var nfcAdapter: NfcAdapter? = null
@@ -63,6 +64,7 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         updateLog("NFC card has been discovered")
 
         val isoDep = IsoDep.get(tag)
+        isoDep.timeout = TIMEOUT_ISODEP
         readPassport(isoDep)
     }
 
