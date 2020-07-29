@@ -1,4 +1,4 @@
-package com.lu.uni.igorzfeel.passport_reader_kotlin
+package com.lu.uni.igorzfeel.passport_reader
 
 
 class Utils {

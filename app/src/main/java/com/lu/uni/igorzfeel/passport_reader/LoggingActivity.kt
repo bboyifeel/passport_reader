@@ -1,4 +1,4 @@
-package com.lu.uni.igorzfeel.passport_reader_kotlin
+package com.lu.uni.igorzfeel.passport_reader
 
 import android.nfc.NfcAdapter
 import android.nfc.Tag
@@ -223,6 +223,4 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         updateLog(dg1.mrzInfo.gender.toString())
         updateLog(dg1.mrzInfo.issuingState.toString())
     }
-
-
 }

@@ -8,7 +8,7 @@ android {
     compileSdkVersion 29
     buildToolsVersion "29.0.2"
     defaultConfig {
-        applicationId "com.lu.uni.igorzfeel.passport_reader_kotlin"
+        applicationId "com.lu.uni.igorzfeel.passport_reader"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
@@ -33,4 +33,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'net.sf.scuba:scuba-sc-android:0.0.20'
+    implementation group: 'org.ejbca.cvc', name: 'cert-cvc', version: '1.4.6'
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.64'
+    implementation group: 'org.jmrtd', name: 'jmrtd', version: '0.7.16'
 }

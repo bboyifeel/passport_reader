@@ -1,4 +1,4 @@
-package com.lu.uni.igorzfeel.passport_reader_kotlin
+package com.lu.uni.igorzfeel.passport_reader
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
