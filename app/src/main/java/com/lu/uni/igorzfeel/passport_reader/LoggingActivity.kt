@@ -5,6 +5,7 @@ import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Bundle
 import android.util.Log
+import android.util.TimingLogger
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_logging.*
@@ -23,7 +24,6 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     companion object {
         val TAG: String  = "LoggingActivity"
-        private const val TIMEOUT_ISODEP = 10_000
     }
 
     private var nfcAdapter: NfcAdapter? = null
@@ -64,7 +64,6 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         updateLog("NFC card has been discovered")
 
         val isoDep = IsoDep.get(tag)
-        isoDep.timeout = TIMEOUT_ISODEP
         readPassport(isoDep)
     }
 
@@ -184,10 +183,18 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         paceKey: PACEKeySpec?
     ): Boolean {
         var paceSucceeded = false
+
+        // to see logs, execute next command:
+        // adb shell setprop log.tag.TimingLoggerDemo VERBOSE
+        // link https://itnext.io/timinglogger-an-idiomatic-android-approach-to-measuring-execution-time-8ac10a8fa0ba
+        val timing = TimingLogger("TimingLoggerDemo", "doPace()")
+
         try {
             val cardAccessFile =
                 CardAccessFile(passportService.getInputStream(PassportService.EF_CARD_ACCESS))
             val secInfos = cardAccessFile.securityInfos
+
+            timing.addSplit("request PACE infoes")
             updateLog(cardAccessFile.toString())
 
             if (secInfos != null && secInfos.isNotEmpty()) {
@@ -197,16 +204,23 @@ class LoggingActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 val paramId = paceInfo.parameterId
                 val params = PACEInfo.toParameterSpec(paramId)
 
-                updateLog(paceInfo.protocolOIDString)
-                updateLog(PACEInfo.toStandardizedParamIdString(paramId))
+//                updateLog(paceInfo.protocolOIDString)
+//                updateLog(PACEInfo.toStandardizedParamIdString(paramId))
+
+                timing.addSplit("print PACE infos")
 
                 passportService.doPACE(paceKey, oid, params, paramId)
+                timing.addSplit("jmrtd.doPace()")
+
                 paceSucceeded = true
                 updateLog("PACE has succeeded")
             }
         } catch (e: Exception) {
+            timing.addSplit("jmrtd.doPace()")
             updateError("PACE has failed with next error:")
             updateError(e.toString())
+        } finally {
+            timing.dumpToLog()
         }
 
         return paceSucceeded
